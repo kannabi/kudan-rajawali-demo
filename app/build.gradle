@@ -14,7 +14,7 @@ android {
             cmake {
                 cppFlags "-std=c++11 -frtti -fexceptions"
                 arguments "-DANDROID_STL=gnustl_static"
-                abiFilters "armeabi-v7a"
+                abiFilters "armeabi-v7a", "arm64-v8a"
             }
         }
     }
@@ -44,4 +44,6 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:23.0.1'
     testCompile 'junit:junit:4.12'
+
+    compile 'org.rajawali3d:rajawali:1.1.970'
 }

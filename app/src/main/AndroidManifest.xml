@@ -16,7 +16,8 @@
 
         <meta-data
             android:name="eu.kudan.ar.API_KEY"
-            android:value="">
+            android:value="Cv6r6w8qT4QmJukUwb7ibN7Kpm+Gk1vgFUILJoaoy2Lnw7yayqHx0/B1FUdVWL/GhUvLiocKp3DTxw6JDuiN2OLY+Zq5jWIPxHc4S23YSzMSWRmzGC3AyhsvK5gopJfJv4Xr6bJcQemjmpJ1jOJ6IjAgJlfkQxF4RyvBVH4/27aqj+Q950kODE9h8z5c06HWLALykUfKy95w/ImdjI10iC4C1TaMxZFH+HwB6XNR0b+Wop9Jy40JPCbXbPABRTNIUdZQJ1IvhbOpwhYsl4DFkgule3G4vyyNPlOWDQYXRhE1cnevfjpeNbR4urkDt4Lmu+EWvm9cX7Uv4xACp/JLXgraHXarYNEfDVZrXSl/yzx9WgGN2HlE54Fi1UOfgF1Xzpk4njK2t46bQxL+EnWyO9XD1o8wNUtLCDBwo+wULk/dy57nZyDBggd+JGZiFpTXHyTA6mgUk8kvv9zn+sw5DlsZqBz5FN9WqHbTcwAFFJPDfPWyBBb0H6+PKr+jrRIwNAPYHZ6uhdSUhy3gvqpPpJRO+A1EDpydBl0zbuHpdsQ2vKiLdL451gK10vAsTgAPrk5ZuItUsshdUNQtDmQkqIqwHf0GdTR+ZZT5X49E0Td0ivUKpZh0LhN+eUGB/hVy8LmmgTVmlcBQ/P54YfVb6cx888cUldqjojNcb066r68=
+">
         </meta-data>
 
         <activity
