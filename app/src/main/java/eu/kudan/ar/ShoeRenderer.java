@@ -24,23 +24,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 
-import static eu.kudan.ar.Utils.castToDouble;
-
 public class ShoeRenderer extends Renderer implements MarkerMoveListener {
 
     private Object3D mainObject;
     private DirectionalLight mDirectionalLight;
 
-    private float[] poseMatrix;
+    private Quaternion quaternion;
 
     private float xCoord = 0f;
     private float yCoord = 0f;
     private float zCoord = 0f;
-    private final static float COORDINATE_RATIO = 100.0f;
-
-    private final static double Z_CORRECTION = -120;
-//    private final static double X_CORRECTION = -50;
-    private final static double Y_CORRECTION = -50;
+    private final static float COORDINATE_RATIO = 0.001f;
 
     private ObjectCorrection objectCorrection = new ObjectCorrection();
 
@@ -65,8 +59,9 @@ public class ShoeRenderer extends Renderer implements MarkerMoveListener {
             parser.parse();
             mainObject = parser.getParsedObject();
             objectCorrection.setScale(60.0);
-            objectCorrection.setX(5.0);
-            objectCorrection.setY(5.0);
+//            objectCorrection.setScale(2.0);
+//            objectCorrection.setX(5.0);
+//            objectCorrection.setY(5.0);
 
             Object3D cylinder = mainObject.getChildByName("Cylinder");
             cylinder.setBlendingEnabled(true);
@@ -86,7 +81,6 @@ public class ShoeRenderer extends Renderer implements MarkerMoveListener {
 
             getCurrentScene().addChild(
                     mainObject
-//                    mainObject = getCube()
             );
         }
         catch (ParsingException e) {
@@ -173,18 +167,15 @@ public class ShoeRenderer extends Renderer implements MarkerMoveListener {
     public void onRender(final long ellapsedRealtime, final double deltaTime) {
         super.onRender(ellapsedRealtime, deltaTime);
 
-        if (poseMatrix != null) {
+        if (quaternion != null) {
             if (k++ != 1) {
                 if (!watchVisible) {
                     mainObject.setVisible(true);
                 }
                 watchVisible = true;
-                double[] moveMatrix =
-                        castToDouble(poseMatrix)
-                        ;
-                updatePosition(mainObject, moveMatrix, true);
+                updatePosition(mainObject, quaternion, true);
                 correctScale(objectCorrection.getScale(), mainObject);
-                poseMatrix = null;
+                quaternion = null;
                 k = 0;
             }
         } else {
@@ -193,23 +184,16 @@ public class ShoeRenderer extends Renderer implements MarkerMoveListener {
         }
     }
 
-    private void printCoordinates() {
-        System.out.println("=========================================");
-        System.out.println(String.format("x: %f y: %f z: %f", xCoord, yCoord, zCoord));
-    }
-
     private void correctScale(double newScale, Object3D object) {
         if (object.getScaleX() != newScale) {
             object.setScale(newScale);
         }
     }
 
-    private void updatePosition(Object3D object, double[] moveMatrix, boolean correct) {
-        object.setOrientation(
-            new Quaternion().fromMatrix(moveMatrix)
-        );
+    private void updatePosition(Object3D object, Quaternion quaternion, boolean correct) {
+        object.setOrientation(quaternion);
 
-//        Log.d("POSITION", String.format("x: %f y: %f z: %f", xCoord, yCoord, zCoord));
+        Log.d("POSITION", String.format("x: %f y: %f z: %f", xCoord, yCoord, zCoord));
 
         object.setX(xCoord + (correct ? objectCorrection.getX() : 0));
         object.setY(yCoord + (correct ? objectCorrection.getY() : 0));
@@ -217,11 +201,11 @@ public class ShoeRenderer extends Renderer implements MarkerMoveListener {
     }
 
     @Override
-    public void onMarkerUpdate(float[] poseMatrix, float xCoord, float yCoord, float zCoord) {
-        this.poseMatrix = poseMatrix;
-        this.xCoord = yCoord * COORDINATE_RATIO;
-        this.yCoord = -xCoord * COORDINATE_RATIO;
-        this.zCoord = zCoord * COORDINATE_RATIO;
+    public void onMarkerUpdate(Quaternion quaternion, float xCoord, float yCoord, float zCoord) {
+        this.quaternion = quaternion;
+        this.xCoord = xCoord * COORDINATE_RATIO;
+        this.yCoord = -yCoord * COORDINATE_RATIO;
+        this.zCoord = -zCoord * COORDINATE_RATIO;
     }
 
     public ObjectCorrection getObjectCorrection() {

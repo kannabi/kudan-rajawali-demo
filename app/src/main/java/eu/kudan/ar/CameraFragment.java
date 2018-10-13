@@ -39,11 +39,17 @@ import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.TextView;
+
+import org.rajawali3d.math.Quaternion;
+import org.rajawali3d.view.ISurface;
+import org.rajawali3d.view.SurfaceView;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -301,6 +307,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
     //endregion
 
+    private MarkerMoveListener listener;
+
     //region Constructors and Factories
 
     /**
@@ -343,6 +351,22 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
         mSurfaceView = (CameraSurfaceView) view.findViewById(R.id.surface_view);
         mSurfaceView.setAspectRatio(mCameraPreviewSize.getWidth(), mCameraPreviewSize.getHeight());
+        SurfaceView surfaceView = new SurfaceView(getActivity());
+        surfaceView.setTransparent(true);
+        surfaceView.setFrameRate(30);
+        surfaceView.setRenderMode(ISurface.RENDERMODE_WHEN_DIRTY);
+
+        ShoeRenderer shoeRenderer = new ShoeRenderer(getActivity());
+        listener = shoeRenderer;
+        surfaceView.setSurfaceRenderer(shoeRenderer);
+
+        ((FrameLayout)getView()).addView(
+                surfaceView,
+                new ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                )
+        );
 
         mStatusLabel = (TextView) view.findViewById(R.id.status_label);
 
@@ -813,10 +837,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         Canvas canvas = mSurfaceView.getHolder().getSurface().lockCanvas(mSurfaceView.getClipBounds());
 
         // Draw the background camera image.
-        Drawing.drawBackground(
-                canvas,
-                cameraFrame
-        );
+        Drawing.drawBackground(canvas, cameraFrame);
 
         // Draw the tracking primitive.
         Drawing.drawPrimitive(
@@ -829,6 +850,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 primitiveCorners.get(3),
                 primitiveLabel
         );
+
 
         // Unlock the CameraSurfaceView Surface to render to screen.
         mSurfaceView.getHolder().getSurface().unlockCanvasAndPost(canvas);
@@ -893,6 +915,28 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     }
 
     //endregion
+
+    public void setMove(float qW, float qX, float qY, float qZ, float x, float y, float z) {
+        listener.onMarkerUpdate(new Quaternion(qW, qX, qY, qZ), x, y, z);
+        Log.d("SET_MOVE",
+            String.format(
+                Locale.ENGLISH,
+                "qw %f qx %f qy %f qz %f x %f y %f z %f ",
+                qW, qX, qY, qZ, x, y, z
+            )
+        );
+    }
+
+    public void setMove(float xAngle, float yAngle, float zAngle, float x, float y, float z) {
+        listener.onMarkerUpdate(new Quaternion().fromEuler(yAngle, xAngle, zAngle), x, y, z);
+        Log.d("SET_MOVE",
+                String.format(
+                        Locale.ENGLISH,
+                        "xa %f ya %f za %f x %f y %f z %f ",
+                        xAngle, yAngle, zAngle, x, y, z
+                )
+        );
+    }
 
     //region Native Methods
 

@@ -1,5 +1,8 @@
 package eu.kudan.ar;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.signum;
+
 public class Utils {
 
     public static String toStringMatrix44(float[] matrix) {
@@ -52,3 +55,4 @@ public class Utils {
         return res;
     }
 }
+

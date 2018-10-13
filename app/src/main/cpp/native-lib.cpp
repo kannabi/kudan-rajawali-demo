@@ -4,6 +4,13 @@
 #include <android/bitmap.h>
 
 #include <KudanCV.h>
+#include <iostream>
+#include <sstream>
+#include <math.h>
+#include <stdlib.h>
+
+#define PI 3.14159265
+#define RADIAN_COEF (float)(180.0 / PI)
 
 /**
  * Helper method for projecting 3D tracking points to screen-space.
@@ -196,9 +203,62 @@ jboolean Java_eu_kudan_ar_CameraFragment_addTrackableToImageTracker(
     }
 }
 
+int sgn(float value) {
+    return value > 0 ? 1 : value == 0 ? 0 : -1;
+}
+
+float mirror(float value) {
+    return (float)((180 - fabs(value)) * sgn(value));
+}
+
+float clamp(float value, float min, float max) {
+    return value < min ? min : value > max ? max : value;
+}
+
+int get_gimbal_pole(KudanQuaternion quaternion) {
+    double t = quaternion.y * quaternion.x + quaternion.z * quaternion.w;
+    return t > 0.499 ? 1 : (t < -0.499 ? -1 : 0);
+}
+
+KudanVector3* extract_angles(KudanQuaternion quaternion) {
+    float w = quaternion.w;
+    float x = quaternion.x;
+    float y = quaternion.y;
+    float z = quaternion.z;
+    int pole = get_gimbal_pole(quaternion);
+    bool equator = 0 == pole;
+    float x_angle = (float) (equator ? asin(clamp(2.0f * (w * x - z * y), -1.0f, 1.0f)) : pole * PI * 0.5f);
+    float y_angle = (float) (equator ? atan2(2.0 * (y * w + x * z), 1.0 - 2.0 * (y * y + x * x)) : 0);
+    float z_angle = (float) (equator ?
+                     atan2(2.0 * (w * z + y * x), 1.0 - 2.0 * (x * x + z * z))
+                     : pole * 2.0 * atan2(y, w));
+    return new KudanVector3(x_angle, y_angle, z_angle);
+}
+
+void notifyMove(
+        JNIEnv *env, jobject javaThis,
+        KudanQuaternion orientation, KudanVector3 position
+) {
+    jclass cls = env->GetObjectClass(javaThis);
+    jmethodID setMove = env->GetMethodID(cls, "setMove", "(FFFFFF)V");
+
+    KudanVector3* angles = extract_angles(orientation);
+    jfloat x_angle = (angles -> x) * RADIAN_COEF * -1.0f;
+    jfloat y_angle = (angles -> y) * RADIAN_COEF;
+    jfloat z_angle = (angles -> z) * RADIAN_COEF;
+    jfloat x = position.x;
+    jfloat y = position.y;
+    jfloat z = position.z;
+
+    env -> CallVoidMethod(
+            javaThis, setMove,
+            x_angle, y_angle, z_angle, x, y, z
+    );
+}
+
 jfloatArray Java_eu_kudan_ar_CameraFragment_processImageTrackerFrame(
         JNIEnv *env,
-        jobject /* this */,
+        jobject javaThis,
         jbyteArray image,
         jint width,
         jint height,
@@ -241,7 +301,7 @@ jfloatArray Java_eu_kudan_ar_CameraFragment_processImageTrackerFrame(
         KudanQuaternion orientation = tracked->getOrientation();
         KudanVector2 projection = project(origin, K, position, orientation);
 
-
+        notifyMove(env, javaThis, orientation, position);
 
         // Store the details of this trackable
         trackedData[0] = projection.x;
@@ -286,6 +346,7 @@ jfloatArray Java_eu_kudan_ar_CameraFragment_processImageTrackerFrame(
 
     return NULL;
 }
+
 
 jfloatArray Java_eu_kudan_ar_CameraFragment_processArbiTrackerFrame(
         JNIEnv *env,
